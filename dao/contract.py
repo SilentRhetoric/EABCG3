@@ -10,16 +10,28 @@ class DAO(Application):
         stack_type=TealType.bytes, default=Global.creator_address()
     )
     reg_begin: Final[ApplicationStateValue] = ApplicationStateValue(
-        stack_type=TealType.bytes, default=Bytes("")
+        stack_type=TealType.uint64, default=Int(0)
     )
 
     reg_end: Final[ApplicationStateValue] = ApplicationStateValue(
         stack_type=TealType.uint64, default=Int(0)
     )
 
-    # highest_bid: Final[ApplicationStateValue] = ApplicationStateValue(
-    #     stack_type=TealType.uint64, default=Int(0)
-    # )
+    vote_begin: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.uint64, default=Int(0)
+    )
+
+    vote_end: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.uint64, default=Int(0)
+    )
+
+    voting_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.bytes, default= #need to figure out how to use the app arg here
+    )
+
+    board_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.bytes, default= #need to figure out how to use the app arg here
+    )
 
     @internal(TealType.none)
     def pay(self, receiver: Expr, amount: Expr):
