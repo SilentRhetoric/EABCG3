@@ -62,12 +62,19 @@ class DAO(Application):
     # Proposal: 1. check ownership of board token, 2. set global byteslice for issue that is being voted on, 3. set registration and voting period
     @external
     def proposal(self, issue: abi.Bytes):
+        # fetch local state of algorand standard asset (ASA) for voting token
+        get_board_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
         return Seq(
-            # this assertion is wrong, need to figure out how to check ownership of board token in beaker
-            Assert(Txn.sender() == self.board_token_address.get()),
-            self.issue.set(issue.get()),
+            # assert that board token is held by sender
+            Assert(get_board_holding.hasValue()),
+            # assert that member has one or more tokens
+            Assert(get_board_holding.value()>=Int(1)),
+            # set issue to be voted on
+            self.issue.set(Txn.application_args[1]),
+            # set registration period
             self.reg_begin.set(Global.latest_timestamp()),
             self.reg_end.set(Global.latest_timestamp() + Int(100)),
+            # set voting period
             self.vote_begin.set(Global.latest_timestamp() + Int(100)),
             self.vote_end.set(Global.latest_timestamp() + Int(200)),
         )
