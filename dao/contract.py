@@ -48,6 +48,12 @@ class DAO(Application):
     def create(self):
         return self.initialize_application_state()
 
+    # Proposal: 1. check ownership of board token, 2. set global byteslice for issue that is being voted on, 3. set registration and voting period
+    # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
+    # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
+    # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. reset global schema`
+
+
     @external(authorize=Authorize.only(owner))
     def start_auction(
         self,
