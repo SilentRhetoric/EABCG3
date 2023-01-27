@@ -94,15 +94,19 @@ class DAO(Application):
         )
     # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. set winner to Yes or No based on which is greater + the issue 4. reset global schema except winner
     def finalize_vote(self):
+        # fetch local state of algorand standard asset (ASA) for voting token
+        get_board_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
         return Seq(
+            # assert that board token is held by sender
+            Assert(get_board_holding.hasValue()),
             # assert that voting period is over
             Assert(Global.latest_timestamp() > self.vote_end.get()),
             # need to assert that sender is board token owner // NOT WORKING
             Assert(Txn.sender() == self.board_token_address.get()),
             # control flow for determining if proposal passed or failed
             If(self.yes.get() > self.no.get())
-            .Then(self.winner.set(Bytes("yes") + self.issue.get()))
-            .Else(self.winner.set(Bytes("no") + self.issue.get())),
+            .Then(self.winner.set(Bytes("yes: ") + self.issue.get()))
+            .Else(self.winner.set(Bytes("no: ") + self.issue.get())),
             # setting all global schema to default except winner
             self.issue.set_default(),
             self.reg_begin.set_default(),
