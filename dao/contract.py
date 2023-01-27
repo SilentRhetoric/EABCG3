@@ -80,10 +80,13 @@ class DAO(Application):
                 self.no.set(self.no.get() + Int(1)),
             ),
         )
+        
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
     def veto(self):
         return Seq(
+            # checks that sender is leader
             Assert(Txn.sender() == self.leader.get()),
+            # resets all global schema
             self.issue.set_default(),
             self.reg_begin.set_default(),
             self.reg_end.set_default(),
@@ -92,6 +95,7 @@ class DAO(Application):
             self.yes.set_default(),
             self.no.set_default(),
         )
+
     # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. set winner to Yes or No based on which is greater + the issue 4. reset global schema except winner
     def finalize_vote(self):
         # fetch local state of algorand standard asset (ASA) for voting token
