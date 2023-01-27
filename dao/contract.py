@@ -26,7 +26,7 @@ class DAO(Application):
         stack_type=TealType.uint64, default=Int(0)
     )
 
-    voting_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
+    voter_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
         stack_type=TealType.bytes, default=Txn.assets[0]
     )
 
@@ -69,14 +69,19 @@ class DAO(Application):
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
     def vote(self, vote: abi.Bytes):
-        get_voter_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
+        get_voter_holding = AssetHolding.balance(Int(0), self.voter_token_address.get()),
         return Seq(
+            # assert that board token is held by sender
+            Assert(get_voter_holding.hasValue()),
+            # assert that member has one or more tokens
+            Assert(get_voter_holding.value()>=Int(1)),
+
             Assert(Global.latest_timestamp() > self.vote_begin.get()),
             Assert(Global.latest_timestamp() < self.vote_end.get()),
 
 
-            Assert(Txn.sender() == self.voting_token_address.get()),
-            Assert(Txn.sender() == self.voting_token_address.get()),
+            Assert(Txn.sender() == self.voter_token_address.get()),
+            Assert(Txn.sender() == self.voter_token_address.get()),
             If(
                 vote.get() == Bytes("yes"),
                 self.yes.set(self.yes.get() + Int(1)),
