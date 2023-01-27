@@ -97,6 +97,7 @@ class DAO(Application):
         return Seq(
             # assert that voting period is over
             Assert(Global.latest_timestamp() > self.vote_end.get()),
+            # need to assert that sender is board token owner // NOT WORKING
             Assert(Txn.sender() == self.board_token_address.get()),
             If(self.yes.get() > self.no.get())
             .Then(self.winner.set(Bytes("yes") + self.issue.get()))
