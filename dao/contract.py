@@ -93,9 +93,8 @@ class DAO(Application):
         return Seq(
             Assert(Txn.sender() == self.board_token_address.get()),
             If(self.yes.get() > self.no.get())
-                self.winner.set(Bytes("yes") + self.issue.get()),
-                self.winner.set(Bytes("no") + self.issue.get()),
-            ),
+            .Then(self.winner.set(Bytes("yes") + self.issue.get()))
+            .Else(self.winner.set(Bytes("no") + self.issue.get())),
             self.issue.set_default(),
             self.reg_begin.set_default(),
             self.reg_end.set_default(),
