@@ -75,8 +75,32 @@ class DAO(Application):
             ),
         )
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
-    # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. reset global schema`
-
+    def veto(self):
+        return Seq(
+            Assert(Txn.sender() == self.leader.get()),
+            self.issue.set_default(),
+            self.reg_begin.set_default(),
+            self.reg_end.set_default(),
+            self.vote_begin.set_default(),
+            self.vote_end.set_default(),
+            self.yes.set_default(),
+            self.no.set_default(),
+        )
+    # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. reset global schema
+    def finalize_vote(self):
+        return Seq(
+            Assert(Txn.sender() == self.board_token_address.get()),
+            If(
+                self.yes.get() > self.no.get(),
+                self.issue.set_default(),
+                self.reg_begin.set_default(),
+                self.reg_end.set_default(),
+                self.vote_begin.set_default(),
+                self.vote_end.set_default(),
+                self.yes.set_default(),
+                self.no.set_default(),
+            ),
+        )
 
     @external(authorize=Authorize.only(owner))
     def start_auction(
