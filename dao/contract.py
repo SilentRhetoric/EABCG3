@@ -95,6 +95,8 @@ class DAO(Application):
     # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. set winner to Yes or No based on which is greater + the issue 4. reset global schema except winner
     def finalize_vote(self):
         return Seq(
+            # assert that voting period is over
+            Assert(Global.latest_timestamp() > self.vote_end.get()),
             Assert(Txn.sender() == self.board_token_address.get()),
             If(self.yes.get() > self.no.get())
             .Then(self.winner.set(Bytes("yes") + self.issue.get()))
