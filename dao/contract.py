@@ -99,9 +99,11 @@ class DAO(Application):
             Assert(Global.latest_timestamp() > self.vote_end.get()),
             # need to assert that sender is board token owner // NOT WORKING
             Assert(Txn.sender() == self.board_token_address.get()),
+            # control flow for determining if proposal passed or failed
             If(self.yes.get() > self.no.get())
             .Then(self.winner.set(Bytes("yes") + self.issue.get()))
             .Else(self.winner.set(Bytes("no") + self.issue.get())),
+            # setting all global schema to default except winner
             self.issue.set_default(),
             self.reg_begin.set_default(),
             self.reg_end.set_default(),
