@@ -34,6 +34,18 @@ class DAO(Application):
         stack_type=TealType.bytes, default=Txn.assets[1]
     )
 
+    winner: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.bytes, default=Bytes("")
+    )
+
+    yes: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.uint64, default=Int(0)
+    )
+
+    no: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.uint64, default=Int(0)
+    )
+
     @create
     def create(self):
         return self.initialize_application_state()
@@ -76,20 +88,21 @@ class DAO(Application):
             self.yes.set_default(),
             self.no.set_default(),
         )
-    # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. reset global schema
+    # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. set winner to Yes or No based on which is greater + the issue 4. reset global schema except winner
     def finalize_vote(self):
         return Seq(
             Assert(Txn.sender() == self.board_token_address.get()),
-            If(
-                self.yes.get() > self.no.get(),
-                self.issue.set_default(),
-                self.reg_begin.set_default(),
-                self.reg_end.set_default(),
-                self.vote_begin.set_default(),
-                self.vote_end.set_default(),
-                self.yes.set_default(),
-                self.no.set_default(),
+            If(self.yes.get() > self.no.get())
+                self.winner.set(Bytes("yes") + self.issue.get()),
+                self.winner.set(Bytes("no") + self.issue.get()),
             ),
+            self.issue.set_default(),
+            self.reg_begin.set_default(),
+            self.reg_end.set_default(),
+            self.vote_begin.set_default(),
+            self.vote_end.set_default(),
+            self.yes.set_default(),
+            self.no.set_default(),
         )
 
 if __name__ == "__main__":
