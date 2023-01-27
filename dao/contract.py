@@ -46,6 +46,10 @@ class DAO(Application):
         stack_type=TealType.uint64, default=Int(0)
     )
 
+    issue: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.bytes, default=Bytes("")
+    )
+
     @create
     def create(self):
         return self.initialize_application_state()
