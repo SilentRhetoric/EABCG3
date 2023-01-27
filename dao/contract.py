@@ -49,7 +49,31 @@ class DAO(Application):
         return self.initialize_application_state()
 
     # Proposal: 1. check ownership of board token, 2. set global byteslice for issue that is being voted on, 3. set registration and voting period
+    @external
+    def proposal(self, issue: abi.Bytes):
+        return Seq(
+            # this assertion is wrong, need to figure out how to check ownership of board token in beaker
+            Assert(Txn.sender() == self.board_token_address.get()),
+            self.issue.set(issue.get()),
+            self.reg_begin.set(Global.latest_timestamp()),
+            self.reg_end.set(Global.latest_timestamp() + Int(100)),
+            self.vote_begin.set(Global.latest_timestamp() + Int(100)),
+            self.vote_end.set(Global.latest_timestamp() + Int(200)),
+        )
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
+    @external
+    def vote(self, vote: abi.Bytes):
+        return Seq(
+            Assert(Global.latest_timestamp() > self.vote_begin.get()),
+            Assert(Global.latest_timestamp() < self.vote_end.get()),
+            Assert(Txn.sender() == self.voting_token_address.get()),
+            Assert(Txn.sender() == self.voting_token_address.get()),
+            If(
+                vote.get() == Bytes("yes"),
+                self.yes.set(self.yes.get() + Int(1)),
+                self.no.set(self.no.get() + Int(1)),
+            ),
+        )
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
     # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. reset global schema`
 
