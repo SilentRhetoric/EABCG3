@@ -50,6 +50,11 @@ class DAO(Application):
         stack_type=TealType.bytes, default=Bytes("")
     )
 
+    # THIS NEED TO BE A LOCAL VAR
+    vote: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.bytes, default=Bytes("")
+    )
+
     @create
     def create(self):
         return self.initialize_application_state()
@@ -75,13 +80,10 @@ class DAO(Application):
             Assert(get_voter_holding.hasValue()),
             # assert that member has one or more tokens
             Assert(get_voter_holding.value()>=Int(1)),
-
+            # assert that voting period is active
             Assert(Global.latest_timestamp() > self.vote_begin.get()),
             Assert(Global.latest_timestamp() < self.vote_end.get()),
 
-
-            Assert(Txn.sender() == self.voter_token_address.get()),
-            Assert(Txn.sender() == self.voter_token_address.get()),
             If(
                 vote.get() == Bytes("yes"),
                 self.yes.set(self.yes.get() + Int(1)),

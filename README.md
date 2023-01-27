@@ -1,10 +1,7 @@
 . venv/bin/activate
 
+TODO:
 
-# Usage
-
-Go to https://gitpod.io/#https://github.com/SilentRhetoric/EABCG3 or copy the [.gitpod.yml](.gitpod.yml) to the repo you wish to have in the gitpod workspace.
-
-# Docker Hub
-
-Tagged releases can be found at https://hub.docker.com/repository/docker/joepol/algorand-gitpod
+1. how to make the vote a local state?
+2. write the opt in method that inits local state
+3. need a script that deploys the ASAs and the smart contract, providing asset array with voter and board token IDs
