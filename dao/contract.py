@@ -83,9 +83,10 @@ class DAO(Application):
             # assert that voting period is active
             Assert(Global.latest_timestamp() > self.vote_begin.get()),
             Assert(Global.latest_timestamp() < self.vote_end.get()),
-
-            If(
-                vote.get() == Bytes("yes"),
+            # assert that vote must be yes, no or abstain
+            Assert(vote.get() == Bytes("yes") or Bytes("no") or Bytes("abstain")),
+            # increment yes or no based on vote
+            If(vote.get() == Bytes("yes"),
                 self.yes.set(self.yes.get() + Int(1)),
                 self.no.set(self.no.get() + Int(1)),
             ),
