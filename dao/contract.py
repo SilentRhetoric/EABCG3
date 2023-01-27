@@ -69,9 +69,12 @@ class DAO(Application):
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
     def vote(self, vote: abi.Bytes):
+        get_voter_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
         return Seq(
             Assert(Global.latest_timestamp() > self.vote_begin.get()),
             Assert(Global.latest_timestamp() < self.vote_end.get()),
+
+
             Assert(Txn.sender() == self.voting_token_address.get()),
             Assert(Txn.sender() == self.voting_token_address.get()),
             If(
@@ -80,7 +83,7 @@ class DAO(Application):
                 self.no.set(self.no.get() + Int(1)),
             ),
         )
-        
+
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
     def veto(self):
         return Seq(
@@ -103,6 +106,8 @@ class DAO(Application):
         return Seq(
             # assert that board token is held by sender
             Assert(get_board_holding.hasValue()),
+            # assert that member has one or more tokens
+            Assert(get_board_holding.value()>=Int(1)),
             # assert that voting period is over
             Assert(Global.latest_timestamp() > self.vote_end.get()),
             # need to assert that sender is board token owner // NOT WORKING
