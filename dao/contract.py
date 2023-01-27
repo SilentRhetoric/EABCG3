@@ -9,6 +9,7 @@ class DAO(Application):
     leader: Final[ApplicationStateValue] = ApplicationStateValue(
         stack_type=TealType.bytes, default=Global.creator_address()
     )
+    
     reg_begin: Final[ApplicationStateValue] = ApplicationStateValue(
         stack_type=TealType.uint64, default=Int(0)
     )
@@ -26,11 +27,11 @@ class DAO(Application):
     )
 
     voting_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
-        stack_type=TealType.bytes, default= #need to figure out how to use the app arg here
+        stack_type=TealType.bytes, default=Txn.assets[0]
     )
 
     board_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
-        stack_type=TealType.bytes, default= #need to figure out how to use the app arg here
+        stack_type=TealType.bytes, default=Txn.assets[1]
     )
 
     @internal(TealType.none)
@@ -164,7 +165,7 @@ class DAO(Application):
 
 
 if __name__ == "__main__":
-    app = Auction(version=7)
+    app = DAO(version=7)
 
     if os.path.exists("approval.teal"):
         os.remove("approval.teal")
