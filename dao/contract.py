@@ -71,7 +71,7 @@ class DAO(Application):
             self.vote_begin.set(Global.latest_timestamp() + Int(100)),
             self.vote_end.set(Global.latest_timestamp() + Int(200)),
         )
-        
+
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
     def vote(self, vote: abi.Bytes):
@@ -87,10 +87,12 @@ class DAO(Application):
             # assert that vote must be yes, no or abstain
             Assert(vote.get() == Bytes("yes") or Bytes("no") or Bytes("abstain")),
             # increment yes or no based on vote
-            If(vote.get() == Bytes("yes"),
-                self.yes.set(self.yes.get() + Int(1)),
-                self.no.set(self.no.get() + Int(1)),
-            ),
+            If(vote.get() == Bytes("yes"))
+            .Then(self.yes.set(self.yes.get() + Int(1)))
+            .ElseIf(vote.get() == Bytes("no"))
+            .Then(self.no.set(self.no.get() + Int(1)))
+            .ElseIf(vote.get() == Bytes("abstain"))
+            .Then(Return(Int(1)))
         )
 
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
