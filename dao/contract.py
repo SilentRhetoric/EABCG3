@@ -71,6 +71,7 @@ class DAO(Application):
             self.vote_begin.set(Global.latest_timestamp() + Int(100)),
             self.vote_end.set(Global.latest_timestamp() + Int(200)),
         )
+        
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
     def vote(self, vote: abi.Bytes):
