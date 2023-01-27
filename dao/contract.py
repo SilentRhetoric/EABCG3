@@ -103,6 +103,7 @@ class DAO(Application):
         )
 
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
+    @external
     def veto(self):
         return Seq(
             # checks that sender is leader
@@ -118,6 +119,7 @@ class DAO(Application):
         )
 
     # Finalize Vote: 1. check board token ownership, 2. compare yes to no (print results if possible), 3. set winner to Yes or No based on which is greater + the issue 4. reset global schema except winner
+    @external
     def finalize_vote(self):
         # fetch local state of algorand standard asset (ASA) for voting token
         get_board_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
