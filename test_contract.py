@@ -116,7 +116,7 @@ def setup():
         payments.add_transaction(send_algos)
 
     payments_response = payments.execute(app_client.client, 2)
-    print(payments_response)
+    print(f'Payment TxIDs: {payments_response.tx_ids}')
 
 
     # Opt voters & board into the ASAs
@@ -145,7 +145,39 @@ def setup():
         opt_ins.add_transaction(opt_in)
         
     opt_ins_response = opt_ins.execute(app_client.client, 2)
-    print(opt_ins_response)
+    print(f'Opt In TxIDs: {opt_ins_response.tx_ids}')
+
+    # Distribute the two tokens
+    token_distribution = AtomicTransactionComposer()
+
+    for voter in voters:
+        send_token = TransactionWithSigner(
+            txn=AssetTransferTxn(
+                sender=creator_acct.address,
+                receiver=voter[1],
+                amt=1,
+                index=voter_token_id,
+                sp=sp,
+            ),
+            signer=creator_acct.signer,
+        )
+        token_distribution.add_transaction(send_token)
+
+    for member in board_members:
+        send_token = TransactionWithSigner(
+            txn=AssetTransferTxn(
+                sender=creator_acct.address,
+                receiver=member[1],
+                amt=1,
+                index=board_token_id,
+                sp=sp,
+            ),
+            signer=creator_acct.signer,
+        )
+        token_distribution.add_transaction(send_token)
+        
+    token_distribution_response = token_distribution.execute(app_client.client, 2)
+    print(f'Asset Xfer TxIDs: {token_distribution_response.tx_ids}')
 
     # Now that the tokens are ready, create the app
     # app_client.create()
