@@ -1,0 +1,52 @@
+{
+    "name": "DAO",
+    "methods": [
+        {
+            "name": "vote",
+            "args": [
+                {
+                    "type": "asset",
+                    "name": "voter_token"
+                },
+                {
+                    "type": "string",
+                    "name": "vote"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "proposal",
+            "args": [
+                {
+                    "type": "asset",
+                    "name": "board_token"
+                },
+                {
+                    "type": "string",
+                    "name": "issue"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "veto",
+            "args": [],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
+            "name": "finalize_vote",
+            "args": [],
+            "returns": {
+                "type": "void"
+            }
+        }
+    ],
+    "networks": {}
+}
