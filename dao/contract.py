@@ -26,12 +26,12 @@ class DAO(Application):
         stack_type=TealType.uint64, default=Int(0)
     )
 
-    voter_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
-        stack_type=TealType.bytes, default=Txn.assets[0]
+    voter_token_id: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.uint64, default=Int(0)
     )
 
-    board_token_address: Final[ApplicationStateValue] = ApplicationStateValue(
-        stack_type=TealType.bytes, default=Txn.assets[1]
+    board_token_id: Final[ApplicationStateValue] = ApplicationStateValue(
+        stack_type=TealType.uint64, default=Int(0)
     )
 
     winner: Final[ApplicationStateValue] = ApplicationStateValue(
@@ -50,8 +50,7 @@ class DAO(Application):
         stack_type=TealType.bytes, default=Bytes("")
     )
 
-    # THIS NEED TO BE A LOCAL VAR
-    vote: Final[ApplicationStateValue] = ApplicationStateValue(
+    vote: Final[AccountStateValue] = AccountStateValue(
         stack_type=TealType.bytes, default=Bytes("")
     )
 
@@ -59,16 +58,22 @@ class DAO(Application):
     def create(self):
         return self.initialize_application_state()
 
+    @opt_in
+    def opt_in(self):
+        return self.initialize_account_state()
+
     # Proposal: 1. check ownership of board token, 2. set global byteslice for issue that is being voted on, 3. set registration and voting period
     @external
-    def proposal(self, issue: abi.Bytes):
+    def proposal(self, board_token: abi.Asset, issue: abi.String):
         # fetch local state of algorand standard asset (ASA) for voting token
-        get_board_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
+        get_board_holding = AssetHolding.balance(Int(0), self.board_token_id.get()),
         return Seq(
+            # assert that the asset in the foreignAssets array is the board token
+            Assert(board_token.asset_id() == self.board_token_id.get()),
             # assert that board token is held by sender
-            Assert(get_board_holding.hasValue()),
-            # assert that member has one or more tokens
-            Assert(get_board_holding.value()>=Int(1)),
+            board_token.holding(Txn.sender())
+            .balance()
+            .outputReducer(lambda value, has_value: Assert(And(has_value, value > Int(0)))),
             # set issue to be voted on
             self.issue.set(Txn.application_args[1]),
             # set registration period
@@ -81,13 +86,15 @@ class DAO(Application):
     
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
-    def vote(self, vote: abi.Bytes):
-        get_voter_holding = AssetHolding.balance(Int(0), self.voter_token_address.get()),
+    def vote(self, voter_token: abi.Asset, vote: abi.String):
+        get_voter_holding = AssetHolding.balance(Int(0), Txn.assets[0]),
         return Seq(
-            # assert that board token is held by sender
-            Assert(get_voter_holding.hasValue()),
-            # assert that member has one or more tokens
-            Assert(get_voter_holding.value()>=Int(1)),
+            # assert that the asset in the foreignAssets array is the voter token
+            Assert(voter_token.asset_id() == self.voter_token_id.get()),
+            # assert that voter token is held by sender
+            voter_token.holding(Txn.sender())
+            .balance()
+            .outputReducer(lambda value, has_value: Assert(And(has_value, value > Int(0)))),
             # assert that voting period is active
             Assert(Global.latest_timestamp() > self.vote_begin.get()),
             Assert(Global.latest_timestamp() < self.vote_end.get()),
@@ -99,7 +106,7 @@ class DAO(Application):
             .ElseIf(vote.get() == Bytes("no"))
             .Then(self.no.set(self.no.get() + Int(1)))
             .ElseIf(vote.get() == Bytes("abstain"))
-            .Then(Return(Int(1)))
+            .Then(Approve())
         )
 
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
@@ -122,18 +129,18 @@ class DAO(Application):
     @external
     def finalize_vote(self):
         # fetch local state of algorand standard asset (ASA) for voting token
-        get_board_holding = AssetHolding.balance(Int(0), self.board_token_address.get()),
+        get_board_holding = AssetHolding.balance(Int(0), self.board_token_id.get()),
         return Seq(
-            # assert that board token is held by sender
-            Assert(get_board_holding.hasValue()),
-            # assert that member has one or more tokens
-            Assert(get_board_holding.value()>=Int(1)),
+            # # assert that board token is held by sender
+            # Assert(get_board_holding.hasValue()),
+            # # assert that member has one or more tokens
+            # Assert(get_board_holding.value()>=Int(1)),
             # assert that voting period is over
             Assert(Global.latest_timestamp() > self.vote_end.get()),
             # control flow for determining if proposal passed or failed
             If(self.yes.get() > self.no.get())
-            .Then(self.winner.set(Bytes("yes: ") + self.issue.get()))
-            .Else(self.winner.set(Bytes("no: ") + self.issue.get())),
+            .Then(self.winner.set(Concat(Bytes("yes: "), self.issue.get())))
+            .Else(self.winner.set(Concat(Bytes("no: "), self.issue.get()))),
             # setting all global schema to default except winner
             self.issue.set_default(),
             self.reg_begin.set_default(),
