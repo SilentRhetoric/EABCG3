@@ -78,7 +78,7 @@ class DAO(Application):
             self.vote_begin.set(Global.latest_timestamp() + Int(100)),
             self.vote_end.set(Global.latest_timestamp() + Int(200)),
         )
-
+    
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
     def vote(self, vote: abi.Bytes):
@@ -130,8 +130,6 @@ class DAO(Application):
             Assert(get_board_holding.value()>=Int(1)),
             # assert that voting period is over
             Assert(Global.latest_timestamp() > self.vote_end.get()),
-            # need to assert that sender is board token owner // NOT WORKING
-            Assert(Txn.sender() == self.board_token_address.get()),
             # control flow for determining if proposal passed or failed
             If(self.yes.get() > self.no.get())
             .Then(self.winner.set(Bytes("yes: ") + self.issue.get()))
