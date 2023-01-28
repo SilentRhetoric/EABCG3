@@ -1,12 +1,13 @@
 from beaker import *
 from contract import DAO
-from algosdk import account
+from algosdk.account import generate_account
 from algosdk.dryrun_results import DryrunResponse
 from algosdk.future.transaction import *
 from algosdk.encoding import encode_address
 from algosdk.atomic_transaction_composer import (
     TransactionWithSigner,
     AtomicTransactionComposer,
+    AccountTransactionSigner
 )
 import pytest
 from beaker.client.state_decode import decode_state
@@ -56,7 +57,7 @@ def setup():
     signed_asset_create_txn = voter_asset_create_txn.sign(creator_acct.private_key)
     global voter_token_id
     voter_token_id = send_and_wait(app_client.client, signed_asset_create_txn)["asset-index"]
-    print(f"Created VOTE Asset ID: {asset_id}")
+    print(f"Created VOTE Asset ID: {voter_token_id}")
 
     board_asset_create_txn = AssetCreateTxn(
         sender=creator_acct.address,
@@ -76,13 +77,17 @@ def setup():
     signed_asset_create_txn = board_asset_create_txn.sign(creator_acct.private_key)
     global board_token_id  
     board_token_id = send_and_wait(app_client.client, signed_asset_create_txn)["asset-index"]
-    print(f"Created BOARD Asset ID: {asset_id}")
+    print(f"Created BOARD Asset ID: {board_token_id}")
+
+    def create_signer_address_tuple():
+        private_key, address, = generate_account()
+        return AccountTransactionSigner(private_key), address
 
     # Send some ALGO to 10 voters & 3 board members
     global voters
-    voters = [account.generate_account() for i in range(10)] # Each account is (pk, addr)
+    voters = [create_signer_address_tuple() for i in range(10)]
     global board_members
-    board_members = [account.generate_account() for i in range(10)]
+    board_members = [create_signer_address_tuple() for i in range(3)]
 
     payments = AtomicTransactionComposer()
 
@@ -121,7 +126,6 @@ def setup():
         opt_in = TransactionWithSigner(
             txn=AssetOptInTxn(
                 sender=voter[1],
-                receiver=voter[1],
                 index=voter_token_id,
                 sp=sp,
             ),
@@ -133,7 +137,6 @@ def setup():
         opt_in = TransactionWithSigner(
             txn=AssetOptInTxn(
                 sender=member[1],
-                receiver=member[1],
                 index=board_token_id,
                 sp=sp,
             ),
