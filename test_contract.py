@@ -246,6 +246,20 @@ def vote_abstain():
         vote=vote_choice
     )
 
+@pytest.fixture(scope="module")
+def vote_else():
+    global vote
+    vote_choice = "something else"
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.vote,
+        voter_token=voter_token_id,
+        signer=voters[0][0], # First voter
+        suggested_params=sp,
+        vote=vote_choice
+    )
+
 #################################
 
 ##############
@@ -291,3 +305,12 @@ def test_no_vote(
     vote_no
 ): 
     assert app_client.get_application_state()["no"] == 1
+
+@pytest.mark.vote
+def test_else_vote(
+    setup,
+    set_proposal,
+    vote_else
+): 
+    assert app_client.get_application_state()["yes"] == 0
+    assert app_client.get_application_state()["no"] == 0
