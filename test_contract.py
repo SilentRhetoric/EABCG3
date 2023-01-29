@@ -347,7 +347,6 @@ def test_propsoal(
 
 @pytest.mark.vote
 def test_yes_vote(
-def test_yes_vote(
     setup,
     set_proposal,
     vote_yes
