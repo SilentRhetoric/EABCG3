@@ -18,6 +18,22 @@
             }
         },
         {
+            "name": "create",
+            "args": [
+                {
+                    "type": "asset",
+                    "name": "voter_token"
+                },
+                {
+                    "type": "asset",
+                    "name": "board_token"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            }
+        },
+        {
             "name": "proposal",
             "args": [
                 {
@@ -26,7 +42,7 @@
                 },
                 {
                     "type": "string",
-                    "name": "issue"
+                    "name": "proposal"
                 }
             ],
             "returns": {

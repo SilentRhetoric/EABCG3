@@ -1,6 +1,6 @@
 from beaker import *
 from contract import DAO
-from algosdk.account import generate_account
+from algosdk.account import generate_account, address_from_private_key
 from algosdk.dryrun_results import DryrunResponse
 from algosdk.future.transaction import *
 from algosdk.encoding import encode_address
@@ -12,12 +12,17 @@ from algosdk.atomic_transaction_composer import (
 from algosdk import mnemonic
 import pytest
 from beaker.client.state_decode import decode_state
+from beaker.sandbox import SandboxAccount
 from util import *
 
 
 @pytest.fixture(scope="module")
 def setup():
+    global app_client
     global accounts  
+    global creator_acct
+
+    ##### SANDBOX #####
     accounts = sorted(
         sandbox.get_accounts(),
         key=lambda a: sandbox.clients.get_algod_client().account_info(a.address)[
@@ -27,16 +32,30 @@ def setup():
     for account in accounts:
         print(account)
 
-    global creator_acct
-    # REPLACE THIS WITH A TESTNET ACCOUNT WITH ALGOS
     creator_acct = accounts.pop()
 
-    global app_client
     app_client = client.ApplicationClient(
         client=sandbox.get_algod_client(),
         app=DAO(version=8),
         signer=creator_acct.signer,
     )
+
+    ##### TESTNET #####
+    # CREATOR_MNEMONIC = "master afford frost forget mimic shoot attract wife grit vanish gorilla asthma extend fatal hospital museum brand interest jacket guard force alcohol confirm above motion"
+    # creator_private_key = mnemonic.to_private_key(CREATOR_MNEMONIC)
+    # creator_address = address_from_private_key(creator_private_key)
+    # creator_signer = AccountTransactionSigner(creator_private_key)
+    # creator_acct = SandboxAccount(creator_address, creator_private_key, creator_signer)
+
+    # algod = AlgodClient("", "https://testnet-api.algonode.cloud")
+    # app_client = client.ApplicationClient(
+    #     client=algod, 
+    #     app=DAO(version=8), 
+    #     signer=creator_acct.signer
+    # )
+
+    ##### Deployment script
+
     sp = app_client.get_suggested_params()
 
     # Create the two ASAs
@@ -87,8 +106,17 @@ def setup():
         return AccountTransactionSigner(private_key), address
 
     # Send some ALGO to 10 voters & 3 board members
+    
+    VOTER_1_MNEMONIC = "abandon satoshi vintage arch impose recipe stumble fringe eyebrow notice drop lamp ill copy panel animal soldier can exchange radio heavy mail kid abstract write"
+    voter_1_private_key = mnemonic.to_private_key(VOTER_1_MNEMONIC)
+    voter_1_signer = AccountTransactionSigner(voter_1_private_key)
+    voter_1_address = address_from_private_key(voter_1_private_key)
+    
+    # First voter is always this account above
     global voters
-    voters = [create_signer_address_tuple() for i in range(10)]
+    voters = [(voter_1_signer, voter_1_address)]+[
+        create_signer_address_tuple() for i in range(9)
+        ]
     global board_members
     board_members = [create_signer_address_tuple() for i in range(3)]
 
@@ -204,7 +232,7 @@ def set_proposal():
         proposal=proposal_text
     )
 
-# VOTING METHODS
+# VOTE METHOD
 @pytest.fixture(scope="module")
 def vote_yes():
     global vote
@@ -286,6 +314,7 @@ def finalize_vote():
         suggested_params=sp,
     )
 
+
 #################################
 
 ##############
@@ -318,6 +347,7 @@ def test_propsoal(
 
 @pytest.mark.vote
 def test_yes_vote(
+def test_yes_vote(
     setup,
     set_proposal,
     vote_yes
@@ -334,29 +364,33 @@ def test_no_vote(
 
 @pytest.mark.vote
 def test_else_vote(
+    setup,
+    set_proposal,
     vote_else
 ): 
     assert app_client.get_application_state()["yes"] == 1
     assert app_client.get_application_state()["no"] == 1
 
-##############
-# veto test
-##############
 
-@pytest.mark.vote
+###########
+# veto test
+###########
+
+@pytest.mark.veto
 def test_veto(
-    # setup,
-    # set_proposal,
-    # vote_yes,
+    setup,
+    set_proposal,
+    vote_yes,
     veto,
 ): 
     assert app_client.get_application_state()["yes"] == 0
+
 
 ####################
 # finalize vote test
 ####################
 
-@pytest.mark.vote
+@pytest.mark.finalize
 def test_finalize_vote(
     setup,
     set_proposal,
