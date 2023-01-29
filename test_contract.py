@@ -274,6 +274,21 @@ def veto():
         sender=creator_acct.address
     )
 
+# FINALIZE VOTE METHOD
+@pytest.fixture(scope="module")
+def set_proposal():
+    global proposal_text
+    proposal_text = "Should the organization do a thing?"
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.proposal,
+        board_token=board_token_id,
+        signer=board_members[0][0], # First board member
+        suggested_params=sp,
+        proposal=proposal_text
+    )
+
 #################################
 
 ##############
