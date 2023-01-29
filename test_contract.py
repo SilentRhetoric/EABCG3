@@ -189,7 +189,7 @@ def setup():
         )
     print(f'App ID: {app_id}')
 
-
+# PROPOSAL METHOD
 @pytest.fixture(scope="module")
 def set_proposal():
     global proposal_text
@@ -204,6 +204,7 @@ def set_proposal():
         proposal=proposal_text
     )
 
+# VOTING METHODS
 @pytest.fixture(scope="module")
 def vote_yes():
     global vote
@@ -260,6 +261,19 @@ def vote_else():
         vote=vote_choice
     )
 
+# VETO METHOD
+@pytest.fixture(scope="module")
+def veto():
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.veto,
+        signer=creator_acct,
+        suggested_params=sp,
+        proposal=proposal_text
+    )
+
+
 #################################
 
 ##############
@@ -314,3 +328,16 @@ def test_else_vote(
 ): 
     assert app_client.get_application_state()["yes"] == 0
     assert app_client.get_application_state()["no"] == 0
+
+##############
+# veto test
+##############
+
+@pytest.mark.vote
+def test_veto(
+    setup,
+    set_proposal,
+    vote_yes,
+    veto,
+): 
+    assert app_client.get_application_state()["yes"] == 0
