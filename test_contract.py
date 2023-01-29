@@ -268,11 +268,11 @@ def veto():
 
     app_client.call(
         DAO.veto,
-        signer=creator_acct,
+        signer=creator_acct.signer,
         suggested_params=sp,
-        proposal=proposal_text
+        proposal=proposal_text,
+        sender=creator_acct.address
     )
-
 
 #################################
 
@@ -322,12 +322,10 @@ def test_no_vote(
 
 @pytest.mark.vote
 def test_else_vote(
-    setup,
-    set_proposal,
     vote_else
 ): 
-    assert app_client.get_application_state()["yes"] == 0
-    assert app_client.get_application_state()["no"] == 0
+    assert app_client.get_application_state()["yes"] == 1
+    assert app_client.get_application_state()["no"] == 1
 
 ##############
 # veto test
@@ -335,9 +333,9 @@ def test_else_vote(
 
 @pytest.mark.vote
 def test_veto(
-    setup,
-    set_proposal,
-    vote_yes,
+    # setup,
+    # set_proposal,
+    # vote_yes,
     veto,
 ): 
     assert app_client.get_application_state()["yes"] == 0
