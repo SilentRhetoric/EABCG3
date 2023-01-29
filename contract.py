@@ -85,7 +85,7 @@ class DAO(Application):
             self.reg_end.set(Global.latest_timestamp() + Int(100)),
             # set voting period
             self.vote_begin.set(Global.latest_timestamp() + Int(100)),
-            self.vote_end.set(Global.latest_timestamp() + Int(200)),
+            self.vote_end.set(Global.latest_timestamp() + Int(100_000_000)),
         )
     
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int

@@ -9,6 +9,7 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
     AccountTransactionSigner
 )
+from algosdk import mnemonic
 import pytest
 from beaker.client.state_decode import decode_state
 from util import *
@@ -27,6 +28,7 @@ def setup():
         print(account)
 
     global creator_acct
+    # REPLACE THIS WITH A TESTNET ACCOUNT WITH ALGOS
     creator_acct = accounts.pop()
 
     global app_client
@@ -81,6 +83,7 @@ def setup():
 
     def create_signer_address_tuple():
         private_key, address, = generate_account()
+        print(mnemonic.from_private_key(private_key))
         return AccountTransactionSigner(private_key), address
 
     # Send some ALGO to 10 voters & 3 board members
@@ -201,6 +204,12 @@ def set_proposal():
         proposal=proposal_text
     )
 
+@pytest.fixture(scope="module")
+def vote():
+    return
+
+#################################
+
 ##############
 # create tests
 ##############
@@ -218,7 +227,7 @@ def test_create_app(
 ################
 
 @pytest.mark.proposal
-def test_vote(
+def test_propsoal(
     setup,
     set_proposal
 ): 
@@ -229,20 +238,10 @@ def test_vote(
 # voting tests
 ##############
 
-# @pytest.mark.vote
-# def test_vote(
-#     setup
-#     set_proposal
-# ): 
-#     return
-
-################
-# end vote tests
-################
-
-# @pytest.mark.end_vote
-# def test_end_vote(
-#     setup
-#     set_proposal
-# ): 
-#     return
+@pytest.mark.vote
+def test_vote(
+    setup,
+    set_proposal,
+    vote
+): 
+    assert app_client.get_application_state()["yes"] == 1
