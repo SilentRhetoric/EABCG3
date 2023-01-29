@@ -205,9 +205,23 @@ def set_proposal():
     )
 
 @pytest.fixture(scope="module")
-def vote():
+def vote_yes():
     global vote
     vote_choice = "yes"
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.vote,
+        voter_token=voter_token_id,
+        signer=voters[0][0], # First voter
+        suggested_params=sp,
+        vote=vote_choice
+    )
+
+@pytest.fixture(scope="module")
+def vote_no():
+    global vote
+    vote_choice = "no"
     sp = app_client.get_suggested_params()
 
     app_client.call(
@@ -252,6 +266,6 @@ def test_propsoal(
 def test_vote(
     setup,
     set_proposal,
-    vote
+    vote_yes
 ): 
     assert app_client.get_application_state()["yes"] == 1
