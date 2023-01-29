@@ -232,6 +232,20 @@ def vote_no():
         vote=vote_choice
     )
 
+@pytest.fixture(scope="module")
+def vote_abstain():
+    global vote
+    vote_choice = "abstain"
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.vote,
+        voter_token=voter_token_id,
+        signer=voters[0][0], # First voter
+        suggested_params=sp,
+        vote=vote_choice
+    )
+
 #################################
 
 ##############
