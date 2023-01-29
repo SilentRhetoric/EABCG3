@@ -276,17 +276,14 @@ def veto():
 
 # FINALIZE VOTE METHOD
 @pytest.fixture(scope="module")
-def set_proposal():
-    global proposal_text
-    proposal_text = "Should the organization do a thing?"
+def finalize_vote():
     sp = app_client.get_suggested_params()
 
     app_client.call(
-        DAO.proposal,
+        DAO.finalize_vote,
         board_token=board_token_id,
         signer=board_members[0][0], # First board member
         suggested_params=sp,
-        proposal=proposal_text
     )
 
 #################################
@@ -352,5 +349,18 @@ def test_veto(
     # set_proposal,
     # vote_yes,
     veto,
+): 
+    assert app_client.get_application_state()["yes"] == 0
+
+####################
+# finalize vote test
+####################
+
+@pytest.mark.vote
+def test_finalize_vote(
+    setup,
+    set_proposal,
+    vote_yes,
+    finalize_vote,
 ): 
     assert app_client.get_application_state()["yes"] == 0
