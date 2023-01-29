@@ -1,0 +1,67 @@
+{
+  "name": "use-wallet-example",
+  "homepage": "https://gabrielkuettel.github.io/use-wallet-example",
+  "version": "0.1.0",
+  "dependencies": {
+    "@blockshake/defly-connect": "^0.3.6",
+    "@json-rpc-tools/utils": "^1.7.6",
+    "@perawallet/connect": "^0.2.3",
+    "@randlabs/myalgo-connect": "^1.4.0",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@txnlab/use-wallet": "^0.1.15",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.11.65",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@walletconnect/client": "^1.8.0",
+    "algorand-walletconnect-qrcode-modal": "^1.8.0",
+    "algosdk": "^1.22.0",
+    "crypto-browserify": "^3.12.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "typescript": "^4.8.4",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "dev": "yarn start",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build && cp build/index.html build/404.html",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "buffer": "^6.0.3",
+    "gh-pages": "^4.0.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0"
+  }
+}
