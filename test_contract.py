@@ -180,7 +180,26 @@ def setup():
     print(f'Asset Xfer TxIDs: {token_distribution_response.tx_ids}')
 
     # Now that the tokens are ready, create the app
-    # app_client.create()
+    (app_id, app_addr, create_txid) = app_client.create(
+        voter_token=voter_token_id, 
+        board_token=board_token_id
+        )
+    print(f'App ID: {app_id}')
+
+
+@pytest.fixture(scope="module")
+def set_proposal():
+    global proposal_text
+    proposal_text = "Should the organization do a thing?"
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.proposal,
+        board_token=board_token_id,
+        signer=board_members[0][0], # First board member
+        suggested_params=sp,
+        proposal=proposal_text
+    )
 
 ##############
 # create tests
@@ -190,15 +209,30 @@ def setup():
 def test_create_app(
     setup
 ): 
-    return
+    assert app_client.get_application_state()["voter_token_id"] == voter_token_id
+    assert app_client.get_application_state()["board_token_id"] == board_token_id
+
+
+################
+# proposal tests
+################
+
+@pytest.mark.proposal
+def test_vote(
+    setup,
+    set_proposal
+): 
+    assert app_client.get_application_state()["proposal_text"] == proposal_text
+
 
 ##############
 # voting tests
 ##############
 
-# @pytest.mark.create
+# @pytest.mark.vote
 # def test_vote(
 #     setup
+#     set_proposal
 # ): 
 #     return
 
@@ -208,6 +242,7 @@ def test_create_app(
 
 # @pytest.mark.end_vote
 # def test_end_vote(
-#     setup 
+#     setup
+#     set_proposal
 # ): 
 #     return

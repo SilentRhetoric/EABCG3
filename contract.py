@@ -46,7 +46,7 @@ class DAO(Application):
         stack_type=TealType.uint64, default=Int(0)
     )
 
-    issue: Final[ApplicationStateValue] = ApplicationStateValue(
+    proposal_text: Final[ApplicationStateValue] = ApplicationStateValue(
         stack_type=TealType.bytes, default=Bytes("")
     )
 
@@ -55,8 +55,12 @@ class DAO(Application):
     )
 
     @create
-    def create(self):
-        return self.initialize_application_state()
+    def create(self, voter_token: abi.Asset, board_token: abi.Asset):
+        return Seq(
+            self.initialize_application_state(),
+            self.voter_token_id.set(voter_token.asset_id()),
+            self.board_token_id.set(board_token.asset_id())
+        )
 
     @opt_in
     def opt_in(self):
@@ -64,7 +68,7 @@ class DAO(Application):
 
     # Proposal: 1. check ownership of board token, 2. set global byteslice for issue that is being voted on, 3. set registration and voting period
     @external
-    def proposal(self, board_token: abi.Asset, issue: abi.String):
+    def proposal(self, board_token: abi.Asset, proposal: abi.String):
         # fetch local state of algorand standard asset (ASA) for voting token
         get_board_holding = AssetHolding.balance(Int(0), self.board_token_id.get()),
         return Seq(
@@ -75,7 +79,7 @@ class DAO(Application):
             .balance()
             .outputReducer(lambda value, has_value: Assert(And(has_value, value > Int(0)))),
             # set issue to be voted on
-            self.issue.set(Txn.application_args[1]),
+            self.proposal_text.set(proposal.get()),
             # set registration period
             self.reg_begin.set(Global.latest_timestamp()),
             self.reg_end.set(Global.latest_timestamp() + Int(100)),
@@ -116,7 +120,7 @@ class DAO(Application):
             # checks that sender is leader
             Assert(Txn.sender() == self.leader.get()),
             # resets all global schema
-            self.issue.set_default(),
+            self.proposal_text.set_default(),
             self.reg_begin.set_default(),
             self.reg_end.set_default(),
             self.vote_begin.set_default(),
@@ -139,10 +143,10 @@ class DAO(Application):
             Assert(Global.latest_timestamp() > self.vote_end.get()),
             # control flow for determining if proposal passed or failed
             If(self.yes.get() > self.no.get())
-            .Then(self.winner.set(Concat(Bytes("yes: "), self.issue.get())))
-            .Else(self.winner.set(Concat(Bytes("no: "), self.issue.get()))),
+            .Then(self.winner.set(Concat(Bytes("yes: "), self.proposal_text.get())))
+            .Else(self.winner.set(Concat(Bytes("no: "), self.proposal_text.get()))),
             # setting all global schema to default except winner
-            self.issue.set_default(),
+            self.proposal_text.set_default(),
             self.reg_begin.set_default(),
             self.reg_end.set_default(),
             self.vote_begin.set_default(),
