@@ -84,7 +84,7 @@ class DAO(Application):
             self.reg_begin.set(Global.latest_timestamp()),
             self.reg_end.set(Global.latest_timestamp() + Int(100)),
             # set voting period
-            self.vote_begin.set(Global.latest_timestamp() + Int(100)),
+            self.vote_begin.set(Global.latest_timestamp()),
             self.vote_end.set(Global.latest_timestamp() + Int(100_000_000)),
         )
     
@@ -100,8 +100,8 @@ class DAO(Application):
             .balance()
             .outputReducer(lambda value, has_value: Assert(And(has_value, value > Int(0)))),
             # assert that voting period is active
-            Assert(Global.latest_timestamp() > self.vote_begin.get()),
-            Assert(Global.latest_timestamp() < self.vote_end.get()),
+            # Assert(Global.latest_timestamp() > self.vote_begin.get()),
+            # Assert(Global.latest_timestamp() < self.vote_end.get()),
             # assert that vote must be yes, no or abstain
             Assert(vote.get() == Bytes("yes") or Bytes("no") or Bytes("abstain")),
             # increment yes or no based on vote

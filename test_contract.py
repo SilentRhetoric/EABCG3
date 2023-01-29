@@ -206,7 +206,17 @@ def set_proposal():
 
 @pytest.fixture(scope="module")
 def vote():
-    return
+    global vote
+    vote_choice = "yes"
+    sp = app_client.get_suggested_params()
+
+    app_client.call(
+        DAO.vote,
+        voter_token=voter_token_id,
+        signer=voters[0][0], # First voter
+        suggested_params=sp,
+        vote=vote_choice
+    )
 
 #################################
 
