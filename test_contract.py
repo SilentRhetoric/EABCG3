@@ -277,9 +277,17 @@ def test_propsoal(
 ##############
 
 @pytest.mark.vote
-def test_vote(
+def test_yes_vote(
     setup,
     set_proposal,
     vote_yes
 ): 
     assert app_client.get_application_state()["yes"] == 1
+
+@pytest.mark.vote
+def test_no_vote(
+    setup,
+    set_proposal,
+    vote_no
+): 
+    assert app_client.get_application_state()["no"] == 1
