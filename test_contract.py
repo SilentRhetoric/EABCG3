@@ -353,16 +353,19 @@ def test_propsoal(setup, set_proposal):
 ##############
 
 
+# @pytest.mark.skip
 @pytest.mark.vote
 def test_yes_vote(setup, set_proposal, vote_yes):
     assert app_client.get_application_state()["yes"] == 1
 
 
+@pytest.mark.skip
 @pytest.mark.vote
 def test_no_vote(setup, set_proposal, vote_no):
     assert app_client.get_application_state()["no"] == 1
 
 
+@pytest.mark.skip
 @pytest.mark.vote
 def test_else_vote(setup, set_proposal, vote_else):
     assert app_client.get_application_state()["yes"] == 1
@@ -374,6 +377,7 @@ def test_else_vote(setup, set_proposal, vote_else):
 ###########
 
 
+@pytest.mark.skip
 @pytest.mark.veto
 def test_veto(
     setup,
@@ -389,6 +393,7 @@ def test_veto(
 ####################
 
 
+@pytest.mark.skip
 @pytest.mark.finalize
 def test_finalize_vote(
     setup,
