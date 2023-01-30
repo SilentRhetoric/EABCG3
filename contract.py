@@ -5,6 +5,7 @@ import os
 import json
 from typing import Final
 
+
 class DAO(Application):
     leader: Final[ApplicationStateValue] = ApplicationStateValue(
         stack_type=TealType.bytes, default=Global.creator_address()
@@ -59,7 +60,7 @@ class DAO(Application):
         return Seq(
             self.initialize_application_state(),
             self.voter_token_id.set(voter_token.asset_id()),
-            self.board_token_id.set(board_token.asset_id())
+            self.board_token_id.set(board_token.asset_id()),
         )
 
     @opt_in
@@ -70,14 +71,16 @@ class DAO(Application):
     @external
     def proposal(self, board_token: abi.Asset, proposal: abi.String):
         # fetch local state of algorand standard asset (ASA) for voting token
-        get_board_holding = AssetHolding.balance(Int(0), self.board_token_id.get()),
+        get_board_holding = (AssetHolding.balance(Int(0), self.board_token_id.get()),)
         return Seq(
             # assert that the asset in the foreignAssets array is the board token
             Assert(board_token.asset_id() == self.board_token_id.get()),
             # assert that board token is held by sender
             board_token.holding(Txn.sender())
             .balance()
-            .outputReducer(lambda value, has_value: Assert(And(has_value, value > Int(0)))),
+            .outputReducer(
+                lambda value, has_value: Assert(And(has_value, value > Int(0)))
+            ),
             # set issue to be voted on
             self.proposal_text.set(proposal.get()),
             # set registration period
@@ -85,20 +88,22 @@ class DAO(Application):
             self.reg_end.set(Global.latest_timestamp() + Int(100)),
             # set voting period
             self.vote_begin.set(Global.latest_timestamp()),
-            self.vote_end.set(Global.latest_timestamp() + Int(100_000_000)),
+            self.vote_end.set(Global.latest_timestamp() + Int(1_000_000_000)),
         )
-    
+
     # Vote: 1. check voting period is active, 2. check opted in, 3. check voting token ownership, 4. increment yes or no global int
     @external
     def vote(self, voter_token: abi.Asset, vote: abi.String):
-        get_voter_holding = AssetHolding.balance(Int(0), Txn.assets[0]),
+        get_voter_holding = (AssetHolding.balance(Int(0), Txn.assets[0]),)
         return Seq(
             # assert that the asset in the foreignAssets array is the voter token
             Assert(voter_token.asset_id() == self.voter_token_id.get()),
             # assert that voter token is held by sender
             voter_token.holding(Txn.sender())
             .balance()
-            .outputReducer(lambda value, has_value: Assert(And(has_value, value > Int(0)))),
+            .outputReducer(
+                lambda value, has_value: Assert(And(has_value, value > Int(0)))
+            ),
             # assert that voting period is active
             Assert(Global.latest_timestamp() >= self.vote_begin.get()),
             Assert(Global.latest_timestamp() < self.vote_end.get()),
@@ -107,7 +112,7 @@ class DAO(Application):
             .Then(self.yes.set(self.yes.get() + Int(1)))
             .ElseIf(vote.get() == Bytes("no"))
             .Then(self.no.set(self.no.get() + Int(1)))
-            .Else(Approve())
+            .Else(Approve()),
         )
 
     # Veto: 1. check that sender is leader (can be global state or NFT), 2. reset all global schema
@@ -130,7 +135,7 @@ class DAO(Application):
     @external
     def finalize_vote(self):
         # fetch local state of algorand standard asset (ASA) for voting token
-        get_board_holding = AssetHolding.balance(Int(0), self.board_token_id.get()),
+        get_board_holding = (AssetHolding.balance(Int(0), self.board_token_id.get()),)
         return Seq(
             # # assert that board token is held by sender
             # Assert(get_board_holding.hasValue()),
@@ -151,6 +156,7 @@ class DAO(Application):
             self.yes.set_default(),
             self.no.set_default(),
         )
+
 
 if __name__ == "__main__":
     DAO().dump("artifacts")

@@ -7,7 +7,7 @@ from algosdk.encoding import encode_address
 from algosdk.atomic_transaction_composer import (
     TransactionWithSigner,
     AtomicTransactionComposer,
-    AccountTransactionSigner
+    AccountTransactionSigner,
 )
 from algosdk import mnemonic
 import pytest
@@ -19,40 +19,38 @@ from util import *
 @pytest.fixture(scope="module")
 def setup():
     global app_client
-    global accounts  
+    global accounts
     global creator_acct
 
     ##### SANDBOX #####
-    accounts = sorted(
-        sandbox.get_accounts(),
-        key=lambda a: sandbox.clients.get_algod_client().account_info(a.address)[
-            "amount"
-        ],
-    )
-    for account in accounts:
-        print(account)
+    # accounts = sorted(
+    #     sandbox.get_accounts(),
+    #     key=lambda a: sandbox.clients.get_algod_client().account_info(a.address)[
+    #         "amount"
+    #     ],
+    # )
+    # for account in accounts:
+    #     print(account)
 
-    creator_acct = accounts.pop()
+    # creator_acct = accounts.pop()
 
-    app_client = client.ApplicationClient(
-        client=sandbox.get_algod_client(),
-        app=DAO(version=8),
-        signer=creator_acct.signer,
-    )
+    # app_client = client.ApplicationClient(
+    #     client=sandbox.get_algod_client(),
+    #     app=DAO(version=8),
+    #     signer=creator_acct.signer,
+    # )
 
     ##### TESTNET #####
-    # CREATOR_MNEMONIC = "master afford frost forget mimic shoot attract wife grit vanish gorilla asthma extend fatal hospital museum brand interest jacket guard force alcohol confirm above motion"
-    # creator_private_key = mnemonic.to_private_key(CREATOR_MNEMONIC)
-    # creator_address = address_from_private_key(creator_private_key)
-    # creator_signer = AccountTransactionSigner(creator_private_key)
-    # creator_acct = SandboxAccount(creator_address, creator_private_key, creator_signer)
+    CREATOR_MNEMONIC = "master afford frost forget mimic shoot attract wife grit vanish gorilla asthma extend fatal hospital museum brand interest jacket guard force alcohol confirm above motion"
+    creator_private_key = mnemonic.to_private_key(CREATOR_MNEMONIC)
+    creator_address = address_from_private_key(creator_private_key)
+    creator_signer = AccountTransactionSigner(creator_private_key)
+    creator_acct = SandboxAccount(creator_address, creator_private_key, creator_signer)
 
-    # algod = AlgodClient("", "https://testnet-api.algonode.cloud")
-    # app_client = client.ApplicationClient(
-    #     client=algod, 
-    #     app=DAO(version=8), 
-    #     signer=creator_acct.signer
-    # )
+    algod = AlgodClient("", "https://testnet-api.algonode.cloud")
+    app_client = client.ApplicationClient(
+        client=algod, app=DAO(version=8), signer=creator_acct.signer
+    )
 
     ##### Deployment script
 
@@ -77,7 +75,9 @@ def setup():
     )
     signed_asset_create_txn = voter_asset_create_txn.sign(creator_acct.private_key)
     global voter_token_id
-    voter_token_id = send_and_wait(app_client.client, signed_asset_create_txn)["asset-index"]
+    voter_token_id = send_and_wait(app_client.client, signed_asset_create_txn)[
+        "asset-index"
+    ]
     print(f"Created VOTE Asset ID: {voter_token_id}")
 
     board_asset_create_txn = AssetCreateTxn(
@@ -96,27 +96,32 @@ def setup():
         sp=sp,
     )
     signed_asset_create_txn = board_asset_create_txn.sign(creator_acct.private_key)
-    global board_token_id  
-    board_token_id = send_and_wait(app_client.client, signed_asset_create_txn)["asset-index"]
+    global board_token_id
+    board_token_id = send_and_wait(app_client.client, signed_asset_create_txn)[
+        "asset-index"
+    ]
     print(f"Created BOARD Asset ID: {board_token_id}")
 
     def create_signer_address_tuple():
-        private_key, address, = generate_account()
+        (
+            private_key,
+            address,
+        ) = generate_account()
         print(mnemonic.from_private_key(private_key))
         return AccountTransactionSigner(private_key), address
 
     # Send some ALGO to 10 voters & 3 board members
-    
+
     VOTER_1_MNEMONIC = "abandon satoshi vintage arch impose recipe stumble fringe eyebrow notice drop lamp ill copy panel animal soldier can exchange radio heavy mail kid abstract write"
     voter_1_private_key = mnemonic.to_private_key(VOTER_1_MNEMONIC)
     voter_1_signer = AccountTransactionSigner(voter_1_private_key)
     voter_1_address = address_from_private_key(voter_1_private_key)
-    
+
     # First voter is always this account above
     global voters
-    voters = [(voter_1_signer, voter_1_address)]+[
+    voters = [(voter_1_signer, voter_1_address)] + [
         create_signer_address_tuple() for i in range(9)
-        ]
+    ]
     global board_members
     board_members = [create_signer_address_tuple() for i in range(3)]
 
@@ -147,8 +152,7 @@ def setup():
         payments.add_transaction(send_algos)
 
     payments_response = payments.execute(app_client.client, 2)
-    print(f'Payment TxIDs: {payments_response.tx_ids}')
-
+    print(f"Payment TxIDs: {payments_response.tx_ids}")
 
     # Opt voters & board into the ASAs
     opt_ins = AtomicTransactionComposer()
@@ -174,9 +178,9 @@ def setup():
             signer=member[0],
         )
         opt_ins.add_transaction(opt_in)
-        
+
     opt_ins_response = opt_ins.execute(app_client.client, 2)
-    print(f'Opt In TxIDs: {opt_ins_response.tx_ids}')
+    print(f"Opt In TxIDs: {opt_ins_response.tx_ids}")
 
     # Distribute the two tokens
     token_distribution = AtomicTransactionComposer()
@@ -206,16 +210,16 @@ def setup():
             signer=creator_acct.signer,
         )
         token_distribution.add_transaction(send_token)
-        
+
     token_distribution_response = token_distribution.execute(app_client.client, 2)
-    print(f'Asset Xfer TxIDs: {token_distribution_response.tx_ids}')
+    print(f"Asset Xfer TxIDs: {token_distribution_response.tx_ids}")
 
     # Now that the tokens are ready, create the app
     (app_id, app_addr, create_txid) = app_client.create(
-        voter_token=voter_token_id, 
-        board_token=board_token_id
-        )
-    print(f'App ID: {app_id}')
+        voter_token=voter_token_id, board_token=board_token_id
+    )
+    print(f"App ID: {app_id}")
+
 
 # PROPOSAL METHOD
 @pytest.fixture(scope="module")
@@ -227,10 +231,11 @@ def set_proposal():
     app_client.call(
         DAO.proposal,
         board_token=board_token_id,
-        signer=board_members[0][0], # First board member
+        signer=board_members[0][0],  # First board member
         suggested_params=sp,
-        proposal=proposal_text
+        proposal=proposal_text,
     )
+
 
 # VOTE METHOD
 @pytest.fixture(scope="module")
@@ -242,10 +247,11 @@ def vote_yes():
     app_client.call(
         DAO.vote,
         voter_token=voter_token_id,
-        signer=voters[0][0], # First voter
+        signer=voters[0][0],  # First voter
         suggested_params=sp,
-        vote=vote_choice
+        vote=vote_choice,
     )
+
 
 @pytest.fixture(scope="module")
 def vote_no():
@@ -256,10 +262,11 @@ def vote_no():
     app_client.call(
         DAO.vote,
         voter_token=voter_token_id,
-        signer=voters[0][0], # First voter
+        signer=voters[0][0],  # First voter
         suggested_params=sp,
-        vote=vote_choice
+        vote=vote_choice,
     )
+
 
 @pytest.fixture(scope="module")
 def vote_abstain():
@@ -270,10 +277,11 @@ def vote_abstain():
     app_client.call(
         DAO.vote,
         voter_token=voter_token_id,
-        signer=voters[0][0], # First voter
+        signer=voters[0][0],  # First voter
         suggested_params=sp,
-        vote=vote_choice
+        vote=vote_choice,
     )
+
 
 @pytest.fixture(scope="module")
 def vote_else():
@@ -284,10 +292,11 @@ def vote_else():
     app_client.call(
         DAO.vote,
         voter_token=voter_token_id,
-        signer=voters[0][0], # First voter
+        signer=voters[0][0],  # First voter
         suggested_params=sp,
-        vote=vote_choice
+        vote=vote_choice,
     )
+
 
 # VETO METHOD
 @pytest.fixture(scope="module")
@@ -299,8 +308,9 @@ def veto():
         signer=creator_acct.signer,
         suggested_params=sp,
         proposal=proposal_text,
-        sender=creator_acct.address
+        sender=creator_acct.address,
     )
+
 
 # FINALIZE VOTE METHOD
 @pytest.fixture(scope="module")
@@ -310,7 +320,7 @@ def finalize_vote():
     app_client.call(
         DAO.finalize_vote,
         board_token=board_token_id,
-        signer=board_members[0][0], # First board member
+        signer=board_members[0][0],  # First board member
         suggested_params=sp,
     )
 
@@ -321,10 +331,9 @@ def finalize_vote():
 # create tests
 ##############
 
+
 @pytest.mark.create
-def test_create_app(
-    setup
-): 
+def test_create_app(setup):
     assert app_client.get_application_state()["voter_token_id"] == voter_token_id
     assert app_client.get_application_state()["board_token_id"] == board_token_id
 
@@ -333,11 +342,9 @@ def test_create_app(
 # proposal tests
 ################
 
+
 @pytest.mark.proposal
-def test_propsoal(
-    setup,
-    set_proposal
-): 
+def test_propsoal(setup, set_proposal):
     assert app_client.get_application_state()["proposal_text"] == proposal_text
 
 
@@ -345,28 +352,19 @@ def test_propsoal(
 # voting tests
 ##############
 
+
 @pytest.mark.vote
-def test_yes_vote(
-    setup,
-    set_proposal,
-    vote_yes
-): 
+def test_yes_vote(setup, set_proposal, vote_yes):
     assert app_client.get_application_state()["yes"] == 1
 
-@pytest.mark.vote
-def test_no_vote(
-    setup,
-    set_proposal,
-    vote_no
-): 
-    assert app_client.get_application_state()["no"] == 1
 
 @pytest.mark.vote
-def test_else_vote(
-    setup,
-    set_proposal,
-    vote_else
-): 
+def test_no_vote(setup, set_proposal, vote_no):
+    assert app_client.get_application_state()["no"] == 1
+
+
+@pytest.mark.vote
+def test_else_vote(setup, set_proposal, vote_else):
     assert app_client.get_application_state()["yes"] == 1
     assert app_client.get_application_state()["no"] == 1
 
@@ -375,13 +373,14 @@ def test_else_vote(
 # veto test
 ###########
 
+
 @pytest.mark.veto
 def test_veto(
     setup,
     set_proposal,
     vote_yes,
     veto,
-): 
+):
     assert app_client.get_application_state()["yes"] == 0
 
 
@@ -389,11 +388,12 @@ def test_veto(
 # finalize vote test
 ####################
 
+
 @pytest.mark.finalize
 def test_finalize_vote(
     setup,
     set_proposal,
     vote_yes,
     finalize_vote,
-): 
+):
     assert app_client.get_application_state()["yes"] == 0
