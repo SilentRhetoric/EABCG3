@@ -1,4 +1,8 @@
-# next-use-wallet
+# Group 3 DAO Front End (from next-use-wallet)
+
+## TLDR
+
+`yarn && yarn dev`
 
 This is an example project demonstrating [@txnlab/use-wallet](https://github.com/TxnLab/use-wallet) being used in a Next.js app. Connect your wallets with Pera, MyAlgo, Defly, Exodus, AlgoSigner, and WalletConnect. Send ALGO from your active wallet to any Algorand account or NFD.
 
@@ -17,7 +21,7 @@ git clone https://github.com/TxnLab/next-use-wallet.git
 Install dependencies
 
 ```bash
-cd next-use-wallet
+cd web
 yarn install
 ```
 
